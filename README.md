@@ -19,76 +19,79 @@ Write the C Program using Linux message queues API
 Execute the C Program for the desired output. 
 
 # PROGRAM:
-
+```
+DEVELOPED BY : A.LAHARI
+REGISTER NO : 212223230111
+```
 ## C program that receives a message from message queue and display them
 
-```c
-// msqueue.c - Combined Writer/Reader for System V Message Queue
+```
+writer.c
+#include <stdio.h> 
+#include <sys/ipc.h> 
+#include <sys/msg.h> 
+
+// structure for message queue 
+struct mesg_buffer { 
+	long mesg_type; 
+	char mesg_text[100]; 
+} message; 
+int main() 
+{ 	key_t key; 
+	int msgid;
+    // ftok to generate unique key 
+	key = ftok("progfile", 65); 
+	// msgget creates a message queue 
+	// and returns identifier 
+	msgid = msgget(key, 0666 | IPC_CREAT); 
+	message.mesg_type = 1; 
+	printf("Write Data : "); 
+	gets(message.mesg_text); 
+	// msgsnd to send message 
+	msgsnd(msgid, &message, sizeof(message), 0); 
+	// display the message 
+	printf("Data send is : %s \n", message.mesg_text); 
+	return 0; 
+} 
+
+ reader.c
+
+// C Program for Message Queue (Reader Process)
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <sys/ipc.h>
 #include <sys/msg.h>
 
+// structure for message queue
 struct mesg_buffer {
-    long mesg_type;
-    char mesg_text[100];
+	long mesg_type;
+	char mesg_text[100];
 } message;
+int main()
+{
+	key_t key;
+	int msgid;
+    	// ftok to generate unique key
+	key = ftok("progfile", 65);
+	// msgget creates a message queue
+	// and returns identifier
+	msgid = msgget(key, 0666 | IPC_CREAT);
+	// msgrcv to receive message
+	msgrcv(msgid, &message, sizeof(message), 1, 0);
+	// display the message
+	printf("Data Received is : %s \n",
+			message.mesg_text);
 
-int main(int argc, char *argv[]) {
-    key_t key;
-    int msgid;
-
-    if (argc != 2) {
-        printf("Usage: %s writer|reader\n", argv[0]);
-        return 1;
-    }
-
-    key = ftok("msgq.c", 65);
-    if (key == -1) {
-        perror("ftok");
-        return 1;
-    }
-
-    msgid = msgget(key, 0666 | IPC_CREAT);
-    if (msgid == -1) {
-        perror("msgget");
-        return 1;
-    }
-
-    if (strcmp(argv[1], "writer") == 0) {
-        message.mesg_type = 1;
-        printf("Enter Message: ");
-        fgets(message.mesg_text, sizeof(message.mesg_text), stdin);
-        message.mesg_text[strcspn(message.mesg_text, "\n")] = 0; // remove newline
-        if (msgsnd(msgid, &message, sizeof(message), 0) == -1) {
-            perror("msgsnd");
-            return 1;
-        }
-        printf("Message sent: %s\n", message.mesg_text);
-    } else if (strcmp(argv[1], "reader") == 0) {
-        if (msgrcv(msgid, &message, sizeof(message), 1, 0) == -1) {
-            perror("msgrcv");
-            return 1;
-        }
-        printf("Message received: %s\n", message.mesg_text);
-        msgctl(msgid, IPC_RMID, NULL); // destroy queue
-    } else {
-        printf("Invalid argument. Use writer or reader.\n");
-        return 1;
-    }
-
-    return 0;
+	// to destroy the message queue
+	msgctl(msgid, IPC_RMID, NULL);
+	return 0;
 }
 
 ```
+## OUTPUT:
+
+![image](https://github.com/user-attachments/assets/33061503-10e8-4991-a9a9-acb3fc14099b)
 
 
-
-## OUTPUT
-
-
-![img](./img/ex04.png)
 
 # RESULT:
 The programs are executed successfully.
